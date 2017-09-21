@@ -4,7 +4,7 @@ AWS out of the box tends makes things more difficult than they need to be. I'll 
 
 ## whois
 
-My name is Nick Volgas and I'm a software developer turned sys-admin wannabe. I started using AWS for both work and personal projects in 2015 and have spent a large amount of my time automating and tooling myself out of having to work in any way possible. I've gotten both an AWS Solutions Architect Associate certification as well as an AWS DevOps Professional certification. I'm currently the Director of IT Operation at the Information Network of Arkansas and this is my second year presenting at LR Tech Fest.
+My name is Nick Volgas and I'm a software developer turned sys-admin wannabe. I started using AWS for both work and personal projects in 2015 and have spent a large amount of my time automating and tooling myself out of having to work in any way possible. I've gotten both an AWS Solutions Architect Associate certification as well as an AWS DevOps Professional certification. I'm currently the Director of Development at the Information Network of Arkansas and this is my second year presenting at LR Tech Fest.
 
 ## Description
 
@@ -18,12 +18,26 @@ Templated creation of AWS infrastructure
 
 #### Resources
 
-- [Template Bucket Template](https://github.com/volnix/lrtechfest-2017/CloudFormation/templates-bucket.yaml)
-- [Static Site Template](https://github.com/volnix/lrtechfest-2017/CloudFormation/static-site.yaml)
-
+- CloudFormation Templates Bucket
+    - [Template](https://github.com/volnix/lrtechfest-2017/blob/master/CloudFormation/templates-bucket.yaml)
+    - [Video](https://github.com/volnix/lrtechfest-2017/blob/master/CloudFormation/Videos/Templates%20Bucket.mov)
+	- Versioned bucket for account-specific CloudFormation templates that automatically rolls off old versions to cheaper storage tiers
+- Static Website
+    - [Template](https://github.com/volnix/lrtechfest-2017/blob/master/CloudFormation/templates-bucket.yaml)
+    - [Video](https://github.com/volnix/lrtechfest-2017/blob/master/CloudFormation/Videos/Static%20Site.mov)
+	- My personal favorite template - creates an S3 bucket with versioning for static content hosting served out through CloudFront
+	- A WAF can be attached to this site if so desired
 
 ### Account Switching Made Easy
 
+Simple cross-account management by linking shared accounts to one "master" account and switching roles between the accounts
+
+#### Resources
+
+- [Video](https://github.com/volnix/lrtechfest-2017/blob/master/Cross%20Account/Switching%20Roles.mov)
+- [Granting Access for Role Switching](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_permissions-to-switch.html)
+- [How to Switch Roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html)
+- A more "enterprisey" solution leveraging AWS Directory Service (Active Directory): [Cross-Account Manager](http://docs.aws.amazon.com/solutions/latest/cross-account-manager/overview.html)
 
 ### Auto-deletion of EC2 Snapshots
 
