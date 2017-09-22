@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "This template builds everything needed for a static site: an S3 bucket, CloudFront distribution, CF logs bucket, and all the security controls to accompany these."
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterLabels:
+      Account:
+        default: Who is this for?
+      WAFWebACLID:
+        default: The ID of the WAF Web ACL
+      OriginAccessIdentityID:
+        default: The ID field of the origin access identity
+      OriginAccessIdentityCanonicalUser:
+        default: The canonical user field of the origin access identity
+Parameters:
+  Account:
+    Type: String
+    Description: Account name
+  WAFWebACLID:
+    Type: String
+    Default: none
+    Description: WAF Web ACL (leave as 'none' for no WAF)
+  OriginAccessIdentityID:
+    Type: String
+    Description: Origin access identity ID
+  OriginAccessIdentityCanonicalUser:
+    Type: String
+    Description: Origin access identity canonical user
+Conditions:
+  UseWAF: !Not [ !Equals [ !Ref WAFWebACLID, none ] ]
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Join [ "-", [ site, content, !Ref Account ] ]
+      Tags:
+        - Key: Account
+          Value: !Ref Account
+  IAMGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join [ "-", [ site, !Ref Account ] ]
+  IAMPolicy:
+    DependsOn: [ S3Bucket, IAMGroup ]
+    Type: AWS::IAM::Policy
+    Properties:
+      Groups: [ !Ref IAMGroup ]
+      PolicyName: !Join [ "-", [ site, !Ref Account ] ]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:DeleteObject"
+              - "s3:GetObject"
+              - "s3:GetObjectAcl"
+              - "s3:GetObjectTagging"
+              - "s3:PutObject"
+              - "s3:PutObjectTagging"
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
+          - Effect: Allow
+            Action: "s3:ListBucket"
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}"
+  S3BucketPolicy:
+    DependsOn: [ S3Bucket, IAMGroup ]
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Sid: Grant CloudFront Origin Identity access to S3
+            Effect: Allow
+            Principal:
+              CanonicalUser: !Ref OriginAccessIdentityCanonicalUser
+            Action: [ "s3:GetObject" ]
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
+  LogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Join [ "-", [ site, logs, !Ref Account ] ]
+      Tags:
+        - Key: Account
+          Value: !Ref Account
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: [ S3Bucket, LogsBucket ]
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: !Join [ "-", [ site, !Ref Account ] ]
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${OriginAccessIdentityID}"
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Comment: !Join [ "-", [ site, !Ref Account ] ]
+        Logging:
+          IncludeCookies: 'false'
+          Bucket: !GetAtt LogsBucket.DomainName
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: whitelist
+            Locations: [ US ]
+        DefaultCacheBehavior:
+          AllowedMethods: [ HEAD, GET ]
+          MinTTL: '0'
+          MaxTTL: '0'
+          DefaultTTL: '0'
+          TargetOriginId: !Join [ "-", [ site, !Ref Account ] ]
+          SmoothStreaming: 'false'
+          ForwardedValues:
+            QueryString: 'true'
+          ViewerProtocolPolicy: allow-all
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          #AcmCertificateArn: !If [  ]
+          CloudFrontDefaultCertificate: 'true'
+        WebACLId: !If [ UseWAF, !Ref WAFWebACLID, !Ref "AWS::NoValue" ]
+Outputs:
+  S3Bucket:
+    Value: !Ref S3Bucket
+    Description: S3 bucket for content
+  S3BucketDNS:
+    Value: !GetAtt S3Bucket.DomainName
+    Description: S3 bucket DNS for content
+  IAMGroup:
+    Value: !Ref IAMGroup
+    Description: The IAM group to add editors to
+  IAMGroupARN:
+    Value: !GetAtt IAMGroup.Arn
+    Description: The ARN of the editors IAM group
+  IAMPolicy:
+    Value: !Ref IAMPolicy
+    Description: The IAM policy created to attach to the editors group
+  S3BucketPolicy:
+    Value: !Ref S3BucketPolicy
+    Description: The S3 bucket policy attached to the bucket which restricts access to the editors group and the Cloud Front distribution
+  CloudFrontDistribution:
+    Value: !Ref CloudFrontDistribution
+    Description: The Cloud Front distribution created that uses the S3 bucket as an origin
+  LogsBucket:
+    Value: !Ref LogsBucket
+    Description: S3 bucket for Cloud Front access logs
+  LogsBucketDNS:
+    Value: !GetAtt LogsBucket.DomainName
+    Description: S3 bucket DNS for Cloud Front access logs
