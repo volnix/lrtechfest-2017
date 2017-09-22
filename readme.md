@@ -54,12 +54,32 @@ Automatically create EC2 snapshots and then purge them after a certain amount of
 
 If you have multiple AWS accounts you can consolidate the billing for them into one "master" account
 
+#### Resources
+
 - [Link](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/consolidated-billing.html)
 
 ### Cost Allocation Tags
 
+Use resource tags for cost breakdown
+
+#### Resources
+
+- [Creating Tags Video](https://github.com/volnix/lrtechfest-2017/blob/master/Cost%20Allocation%20Tagging/Activating%20Tags.mov)
 
 ### Trusted Advisor
 
+Use Trusted Advisor to identify cost optimization, performance, security, and fault tolerance shortcomings (requires business-tier support plan or higher)
+
+#### Resources
+
+- [Video](https://github.com/volnix/lrtechfest-2017/blob/master/Trusted%20Advisor/Trusted%20Advisor.mov)
 
 ### CloudWatch Logs
+
+CloudWatch logs are an out-of-the-box logging solution with an AWS-provided agent to automatically pipe logs into it
+
+#### Resources
+
+- [Agent Setup](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html)
+
+> **Note:** I have not used this service before so your mileage may vary
